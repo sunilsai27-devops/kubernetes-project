@@ -1,0 +1,6 @@
+   export KOPS_STATE_STORE=s3://demo.k8s.sunil.net
+   kops get ig
+   kops edit ig master-us-east-1a
+   kops edit ig nodes
+   kops update cluster --yes
+
