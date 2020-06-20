@@ -1,0 +1,87 @@
+Installation:
+
+Step 1: In master Vm:
+------------------------
+i) From root user:
+-----------------
+sudo apt-get update -y
+sudo apt-get install -y docker.io
+sudo apt-get update && sudo apt-get install -y apt-transport-https
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+kubeadm init --apiserver-advertise-address=<your private IP address> --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=NumCPU
+
+>>get the join command run it on the worker node.
+
+ii) From non root user:
+-----------------------
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/calico.yaml
+kubectl get pods  --all-namespaces
+kubectl get nodes
+
+Step 2: In Slave VM: 
+--------------------
+From root user:
+---------------
+sudo apt-get update -y
+sudo apt-get install -y docker.io
+sudo apt-get update && sudo apt-get install -y apt-transport-https
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+>> run the kubeadm join command which you get  after running the kubeadm initi
+
+Step 3: In Master VM: (to get the Kubernetes dashboard)
+---------------------
+From non root user:
+-------------------
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta8/aio/deploy/recommended.yaml
+
+Step 4: In Master VM: 
+---------------------
+From non root user:
+-------------------
+i) kubectl get pods -o wide --all-namespaces
+
+ii) kubectl get svc
+
+iii) kubectl get svc --all-namespaces
+
+iv) kubectl proxy &
+
+v) curl 127.0.0.1:8001
+
+vi) kubectl get svc --all-namespaces
+
+vii) kubectl edit svc kubernetes-dashboard --namespace=kubernetes-dashboard
+  //Make type as NodePort in the above file & also if you want you can define your port also
+
+viii) kubectl get svc --all-namespaces  / kubectl -n  kubernetes-dashboard get svc
+//From the above command you will get the port number which you can use to open the dashboard.
+
+ix) kubectl proxy &
+
+x) kubectl create serviceaccount dashboard -n default
+
+xi) kubectl create clusterrolebinding dashboard-admin -n default \
+ --clusterrole=cluster-admin \
+ --serviceaccount=default:dashboard
+
+xii) kubectl get secret $(kubectl get serviceaccount dashboard -o\
+jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode
+
+xiii) kubectl get nodes
+
+xiv) In the Firefox browser use the below URL:
+
+https://IP_Address of master:Port_Number on which the dashboard is running
